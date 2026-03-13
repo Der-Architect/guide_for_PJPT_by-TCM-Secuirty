@@ -25,6 +25,8 @@ Focus:
 - [9) Methodology (end-to-end workflow)](#9-methodology-end-to-end-workflow)
 - [10) Privilege escalation quick guides](#10-privilege-escalation-quick-guides)
 - [11) Active Directory / lateral movement essentials](#11-active-directory--lateral-movement-essentials)
+  - [11.1) PNPJT quick workflow (beginner-friendly)](#111-pnpjt-quick-workflow-beginner-friendly)
+  - [11.2) Active Directory Deep Dive (advanced)](#112-active-directory-deep-dive-advanced)
 - [12) Reporting (what to include)](#12-reporting-what-to-include)
 - [13) Time management during the exam](#13-time-management-during-the-exam)
 - [14) Troubleshooting playbook (when stuck)](#14-troubleshooting-playbook-when-stuck)
@@ -269,6 +271,97 @@ Common “must-know” concepts for network-focused practical exams:
 Operational advice:
 - Keep a running **credential table** (username, password/hash, where found, where tested, result)
 - Keep a running **host table** (IP, role, open ports, notes)
+
+### 11.1) PNPJT quick workflow (beginner-friendly)
+This is a “do this in order” workflow to keep you moving when the network feels large.
+
+1) **Build your map**
+- Run initial scans on every target you’re given.
+- Track results in a host table: `IP → open ports → service → notes`.
+
+2) **Prioritize high-signal services**
+Look first at services that often lead to creds or access:
+- SMB (shares, readable files)
+- HTTP/HTTPS (apps, portals, admin panels)
+- LDAP/Kerberos/DNS (domain signals)
+- WinRM/SSH (direct remote access if creds exist)
+
+3) **Enumerate SMB early and often**
+- List shares.
+- Check for readable files (configs, scripts, backups).
+- Look for passwords in:
+  - `*.txt`, `*.ini`, `*.config`, `*.xml`, `*.yml`, `*.ps1`
+
+4) **Create a credential table (this is huge)**
+Example columns:
+- Username
+- Password / Hash
+- Source (where you found it)
+- Validated on (host/service)
+- Notes (local/domain/admin?)
+
+5) **Credential reuse (controlled + documented)**
+- When you find working creds, test them across:
+  - SMB
+  - WinRM
+  - SSH
+  - Web logins
+
+6) **If AD exists, identify the DC and “center” services**
+Clues:
+- Hostnames mentioning `dc`, `ad`, `corp`, etc.
+- Ports like LDAP/Kerberos/DNS.
+
+7) **Only then go deeper**
+If you have no foothold:
+- return to web enumeration
+- return to SMB file hunting
+- expand scanning scope (if allowed)
+
+### 11.2) Active Directory Deep Dive (advanced)
+> Use this section once you’re comfortable with the beginner workflow. Keep everything within exam rules.
+
+#### Key terminology (quick)
+- **Domain Controller (DC):** central AD server (auth + directory)
+- **LDAP:** directory queries (users/groups/computers)
+- **Kerberos:** domain authentication protocol
+- **SPN:** Service Principal Name (ties services to accounts)
+- **ACL / DACL:** permissions on AD objects (who can do what)
+- **GPO:** Group Policy (config + scripts pushed across machines)
+
+#### High-level AD attack-path thinking
+You’re usually trying to move from:
+- *no creds* → *any creds* → *more privileges* → *high value access*
+
+Common “paths” often involve:
+- Weak/reused passwords
+- Misconfigured shares containing secrets
+- Over-permissive ACLs on users/groups
+- Service accounts with interesting privileges
+- GPOs or scripts that expose credentials
+
+#### Kerberos (what to understand)
+- Where Kerberos is used and why it matters.
+- What “tickets” represent (auth artifacts).
+- Why service accounts can be interesting.
+
+#### LDAP enumeration (what to focus on)
+If you can query LDAP, focus on:
+- Domain users and groups
+- Group memberships (who is admin-ish)
+- Computers and their roles
+- Any exposed descriptions/attributes that leak info
+
+#### ACLs / permissions (conceptual checklist)
+When you have some visibility into AD permissions, look for:
+- Users/groups that can modify other users/groups
+- Rights that allow resetting passwords or adding group members
+- Delegated admin rights that can be abused
+
+#### Practical discipline for advanced sections
+- Keep notes of every query and result.
+- Validate assumptions on the target.
+- Avoid “random tool output dumps” in your report—extract the relevant evidence.
 
 ---
 
